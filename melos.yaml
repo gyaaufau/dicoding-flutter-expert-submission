@@ -1,0 +1,25 @@
+name: ditonton_workspace
+
+packages:
+  - .
+  - domains/**
+  - features/**
+  - shared_libraries/**
+  - resources
+
+scripts:
+  test:
+    run: melos exec --fail-fast --dir-exists=test -- flutter test
+    description: Jalankan semua test di workspace.
+
+  coverage:collect:
+    run: melos exec --fail-fast --dir-exists=test -- flutter test --coverage
+    description: Generate coverage per package.
+
+  coverage:merge:
+    run: dart run tool/merge_coverage.dart
+    description: Gabung semua coverage package jadi satu LCOV root.
+
+  coverage:
+    run: melos run coverage:collect && melos run coverage:merge
+    description: Jalankan coverage workspace end-to-end.
