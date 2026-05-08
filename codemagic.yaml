@@ -35,12 +35,13 @@ workflows:
         script: |
           REPO_ROOT="$(git rev-parse --show-toplevel)"
           cd "$REPO_ROOT"
-          dart run melos run test
+          dart run melos exec --fail-fast --dir-exists=test -- flutter test
       - name: Collect Coverage
         script: |
           REPO_ROOT="$(git rev-parse --show-toplevel)"
           cd "$REPO_ROOT"
-          dart run melos coverage
+          dart run tool/collect_coverage.dart
+          dart run tool/merge_coverage.dart
       - name: Build Android APK
         script: |
           REPO_ROOT="$(git rev-parse --show-toplevel)"
