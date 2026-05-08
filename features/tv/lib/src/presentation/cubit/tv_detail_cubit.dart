@@ -1,4 +1,7 @@
+import 'dart:async';
+
 import 'package:common/common.dart';
+import 'package:core/core.dart';
 import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:tv_domain/tv_domain.dart';
@@ -78,6 +81,10 @@ class TvDetailCubit extends Cubit<TvDetailState> {
   final GetTvSeasonDetail getTvSeasonDetail;
 
   Future<void> fetchTvDetail(int id) async {
+    _recordTvBreadcrumb(
+      'Open tv detail',
+      keys: {'feature': 'tv', 'entity_id': id},
+    );
     emit(state.copyWith(tvState: RequestState.Loading));
 
     final detailResult = await getTvDetail.call(id);
@@ -88,6 +95,10 @@ class TvDetailCubit extends Cubit<TvDetailState> {
         state.copyWith(tvState: RequestState.Error, message: failure.message),
       ),
       (tv) {
+        _logTvAnalyticsEvent(
+          'tv_detail_viewed',
+          params: {'feature': 'tv', 'content_type': 'tv', 'content_id': tv.id},
+        );
         final selectedSeason = _getInitialSelectedSeason(tv);
         emit(
           state.copyWith(
@@ -120,6 +131,10 @@ class TvDetailCubit extends Cubit<TvDetailState> {
   }
 
   Future<void> fetchTvSeasonDetail(int tvId, int seasonNumber) async {
+    _recordTvBreadcrumb(
+      'Fetch tv season detail',
+      keys: {'feature': 'tv', 'entity_id': tvId, 'season_number': seasonNumber},
+    );
     emit(state.copyWith(tvSeasonState: RequestState.Loading));
 
     final result = await getTvSeasonDetail.call(
@@ -140,6 +155,18 @@ class TvDetailCubit extends Cubit<TvDetailState> {
         ),
       ),
     );
+
+    if (result.isRight()) {
+      _logTvAnalyticsEvent(
+        'season_detail_viewed',
+        params: {
+          'feature': 'tv',
+          'content_type': 'tv',
+          'content_id': tvId,
+          'season_number': seasonNumber,
+        },
+      );
+    }
   }
 
   void selectSeason(TvSeason season) {
@@ -152,4 +179,24 @@ class TvDetailCubit extends Cubit<TvDetailState> {
     }
     return tv.seasons.first;
   }
+}
+
+void _recordTvBreadcrumb(
+  String message, {
+  Map<String, Object?> keys = const {},
+}) {
+  if (!locator.isRegistered<CrashReporter>()) {
+    return;
+  }
+  unawaited(locator<CrashReporter>().recordBreadcrumb(message, keys: keys));
+}
+
+void _logTvAnalyticsEvent(
+  String name, {
+  Map<String, Object?> params = const {},
+}) {
+  if (!locator.isRegistered<AnalyticsTracker>()) {
+    return;
+  }
+  unawaited(locator<AnalyticsTracker>().logEvent(name, params: params));
 }

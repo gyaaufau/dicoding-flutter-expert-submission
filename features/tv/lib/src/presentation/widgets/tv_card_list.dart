@@ -1,13 +1,17 @@
+import 'dart:async';
+
 import 'package:common/common.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:core/core.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:tv_domain/tv_domain.dart';
 
 class TvCard extends StatelessWidget {
   final Tv tv;
+  final String? sourceScreen;
 
-  const TvCard(this.tv, {super.key});
+  const TvCard(this.tv, {super.key, this.sourceScreen});
 
   @override
   Widget build(BuildContext context) {
@@ -15,6 +19,20 @@ class TvCard extends StatelessWidget {
       margin: const EdgeInsets.symmetric(vertical: 4),
       child: InkWell(
         onTap: () {
+          if (sourceScreen != null &&
+              locator.isRegistered<AnalyticsTracker>()) {
+            unawaited(
+              locator<AnalyticsTracker>().logEvent(
+                'search_result_opened',
+                params: {
+                  'feature': 'tv',
+                  'content_type': 'tv',
+                  'content_id': tv.id,
+                  'source_screen': sourceScreen,
+                },
+              ),
+            );
+          }
           context.pushNamed('tv-detail', extra: tv.id);
         },
         child: Stack(

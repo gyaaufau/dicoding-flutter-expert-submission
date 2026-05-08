@@ -10,6 +10,34 @@ import 'package:tv_domain/tv_domain.dart';
 import 'dummy_data/dummy_objects.dart';
 import 'json_reader.dart';
 
+class FakeAnalyticsTracker implements AnalyticsTracker {
+  final List<(String, Map<String, Object?>)> events = [];
+
+  @override
+  Future<void> logEvent(
+    String name, {
+    Map<String, Object?> params = const {},
+  }) async {
+    events.add((name, params));
+  }
+
+  @override
+  Future<void> logScreenView({
+    required String screenName,
+    String? feature,
+    Map<String, Object?> params = const {},
+  }) async {}
+
+  @override
+  Future<void> setAnalyticsCollectionEnabled(bool enabled) async {}
+
+  @override
+  Future<void> setUserProperty({
+    required String name,
+    required String? value,
+  }) async {}
+}
+
 class FakeTvRepository implements TvRepository {
   Future<Either<Failure, List<Tv>>> Function()? onGetOnTheAirTv;
   Future<Either<Failure, List<Tv>>> Function()? onGetPopularTv;
@@ -47,7 +75,8 @@ class FakeTvRepository implements TvRepository {
   ) => onGetTvSeasonDetail!(seriesId, seasonNumber);
 
   @override
-  Future<Either<Failure, List<Tv>>> searchTv(String query) => onSearchTv!(query);
+  Future<Either<Failure, List<Tv>>> searchTv(String query) =>
+      onSearchTv!(query);
 
   @override
   Future<Either<Failure, List<Tv>>> getWatchlistTv() => onGetWatchlistTv!();
@@ -74,36 +103,46 @@ final testTvSeasonDetailEntity = TvSeasonDetailDto.fromJson(
 
 void main() {
   late FakeTvRepository repository;
+  late FakeAnalyticsTracker analyticsTracker;
 
   setUp(() {
     repository = FakeTvRepository();
+    analyticsTracker = FakeAnalyticsTracker();
+    locator.registerSingleton<AnalyticsTracker>(analyticsTracker);
   });
 
-  test('should emit [Loading, Loaded] when on the air data is gotten', () async {
-    // arrange
-    repository.onGetOnTheAirTv = () async => Right(<Tv>[testWatchlistTv]);
-    final cubit = TvListCubit(
-      getOnTheAirTvUseCase: GetOnTheAirTv(repository),
-      getPopularTvUseCase: GetPopularTv(repository),
-      getTopRatedTvUseCase: GetTopRatedTv(repository),
-    );
-
-    // act
-    final expectation = expectLater(
-      cubit.stream,
-      emitsInOrder([
-        const TvListState(onTheAirTvShowsState: RequestState.Loading),
-        TvListState(
-          onTheAirTvShows: <Tv>[testWatchlistTv],
-          onTheAirTvShowsState: RequestState.Loaded,
-        ),
-      ]),
-    );
-    await cubit.fetchOnTheAirTvShows();
-
-    // assert
-    await expectation;
+  tearDown(() async {
+    await locator.reset();
   });
+
+  test(
+    'should emit [Loading, Loaded] when on the air data is gotten',
+    () async {
+      // arrange
+      repository.onGetOnTheAirTv = () async => Right(<Tv>[testWatchlistTv]);
+      final cubit = TvListCubit(
+        getOnTheAirTvUseCase: GetOnTheAirTv(repository),
+        getPopularTvUseCase: GetPopularTv(repository),
+        getTopRatedTvUseCase: GetTopRatedTv(repository),
+      );
+
+      // act
+      final expectation = expectLater(
+        cubit.stream,
+        emitsInOrder([
+          const TvListState(onTheAirTvShowsState: RequestState.Loading),
+          TvListState(
+            onTheAirTvShows: <Tv>[testWatchlistTv],
+            onTheAirTvShowsState: RequestState.Loaded,
+          ),
+        ]),
+      );
+      await cubit.fetchOnTheAirTvShows();
+
+      // assert
+      await expectation;
+    },
+  );
 
   test('should emit [Loading, Error] when search is unsuccessful', () async {
     // arrange
@@ -122,6 +161,8 @@ void main() {
 
     // assert
     await expectation;
+    expect(analyticsTracker.events.single.$1, 'search_submitted');
+    expect(analyticsTracker.events.single.$2['query_length'], 3);
   });
 
   test(
@@ -129,8 +170,8 @@ void main() {
     () async {
       // arrange
       repository.onGetTvDetail = (_) async => Right(testTvDetailEntity);
-      repository.onGetTvRecommendations =
-          (_) async => Right(<Tv>[testWatchlistTv]);
+      repository.onGetTvRecommendations = (_) async =>
+          Right(<Tv>[testWatchlistTv]);
       final cubit = TvDetailCubit(
         getTvDetail: GetTvDetail(repository),
         getTvRecommendations: GetTvRecommendations(repository),
@@ -144,46 +185,92 @@ void main() {
           const TvDetailState(tvState: RequestState.Loading),
           isA<TvDetailState>()
               .having((s) => s.tv, 'tv', testTvDetailEntity)
-              .having((s) => s.recommendationState, 'recommendationState',
-                  RequestState.Loading),
+              .having(
+                (s) => s.recommendationState,
+                'recommendationState',
+                RequestState.Loading,
+              ),
           isA<TvDetailState>()
               .having((s) => s.tvState, 'tvState', RequestState.Loaded)
-              .having((s) => s.tvRecommendations, 'tvRecommendations',
-                  <Tv>[testWatchlistTv]),
+              .having((s) => s.tvRecommendations, 'tvRecommendations', <Tv>[
+                testWatchlistTv,
+              ]),
         ]),
       );
       await cubit.fetchTvDetail(1);
 
       // assert
       await expectation;
+      expect(analyticsTracker.events.single.$1, 'tv_detail_viewed');
+      expect(
+        analyticsTracker.events.single.$2['content_id'],
+        testTvDetailEntity.id,
+      );
     },
   );
 
-  test('should emit season data when fetch season detail is successful', () async {
-    // arrange
-    repository.onGetTvSeasonDetail =
-        (_, __) async => Right(testTvSeasonDetailEntity);
-    final cubit = TvDetailCubit(
-      getTvDetail: GetTvDetail(repository),
-      getTvRecommendations: GetTvRecommendations(repository),
-      getTvSeasonDetail: GetTvSeasonDetail(repository),
-    );
+  test(
+    'should emit season data when fetch season detail is successful',
+    () async {
+      // arrange
+      repository.onGetTvSeasonDetail = (_, __) async =>
+          Right(testTvSeasonDetailEntity);
+      final cubit = TvDetailCubit(
+        getTvDetail: GetTvDetail(repository),
+        getTvRecommendations: GetTvRecommendations(repository),
+        getTvSeasonDetail: GetTvSeasonDetail(repository),
+      );
 
-    // act
-    final expectation = expectLater(
-      cubit.stream,
-      emitsInOrder([
-        const TvDetailState(tvSeasonState: RequestState.Loading),
-        isA<TvDetailState>()
-            .having((s) => s.tvSeasonState, 'tvSeasonState',
-                RequestState.Loaded)
-            .having((s) => s.tvSeasonsDetails, 'tvSeasonsDetails',
-                testTvSeasonDetailEntity),
-      ]),
-    );
-    await cubit.fetchTvSeasonDetail(1, 1);
+      // act
+      final expectation = expectLater(
+        cubit.stream,
+        emitsInOrder([
+          const TvDetailState(tvSeasonState: RequestState.Loading),
+          isA<TvDetailState>()
+              .having(
+                (s) => s.tvSeasonState,
+                'tvSeasonState',
+                RequestState.Loaded,
+              )
+              .having(
+                (s) => s.tvSeasonsDetails,
+                'tvSeasonsDetails',
+                testTvSeasonDetailEntity,
+              ),
+        ]),
+      );
+      await cubit.fetchTvSeasonDetail(1, 1);
 
-    // assert
-    await expectation;
-  });
+      // assert
+      await expectation;
+      expect(analyticsTracker.events.single.$1, 'season_detail_viewed');
+      expect(analyticsTracker.events.single.$2['season_number'], 1);
+    },
+  );
+
+  test(
+    'should log watchlist_added when save watchlist is successful',
+    () async {
+      // arrange
+      repository.onSaveWatchlist = (_) async =>
+          Right(WatchlistTvCubit.watchlistAddSuccessMessage);
+      repository.onIsAddedToWatchlist = (_) async => true;
+      final cubit = WatchlistTvCubit(
+        getWatchlistTv: GetWatchlistTv(repository),
+        getWatchlistTvStatus: GetWatchlistTvStatus(repository),
+        saveWatchlistTv: SaveWatchlistTv(repository),
+        removeWatchlistTv: RemoveWatchlistTv(repository),
+      );
+
+      // act
+      await cubit.addWatchlist(testTvDetailEntity);
+
+      // assert
+      expect(analyticsTracker.events.single.$1, 'watchlist_added');
+      expect(
+        analyticsTracker.events.single.$2['content_id'],
+        testTvDetailEntity.id,
+      );
+    },
+  );
 }

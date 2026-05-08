@@ -1,5 +1,3 @@
-library dependencies;
-
 export 'package:cached_network_image/cached_network_image.dart';
 export 'package:dartz/dartz.dart';
 export 'package:data_connection_checker/data_connection_checker.dart';
@@ -10,5 +8,9 @@ export 'package:flutter_screenutil/flutter_screenutil.dart';
 export 'package:get_it/get_it.dart';
 export 'package:go_router/go_router.dart';
 export 'package:http/http.dart';
+export 'package:package_info_plus/package_info_plus.dart';
 export 'package:path_provider/path_provider.dart';
 export 'package:sqflite/sqflite.dart' hide DatabaseException;
+export 'package:firebase_core/firebase_core.dart';
+export 'package:firebase_crashlytics/firebase_crashlytics.dart';
+export 'package:firebase_analytics/firebase_analytics.dart';

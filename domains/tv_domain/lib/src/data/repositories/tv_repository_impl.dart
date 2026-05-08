@@ -1,7 +1,8 @@
 import 'dart:io';
 
-import 'package:dependencies/dependencies.dart';
 import 'package:common/common.dart';
+import 'package:core/core.dart';
+import 'package:dependencies/dependencies.dart';
 import 'package:tv_domain/src/data/datasources/tv_local_data_source.dart';
 import 'package:tv_domain/src/data/models/tv_table.dart';
 import 'package:tv_domain/src/data/datasources/tv_remote_data_source.dart';
@@ -13,10 +14,12 @@ import 'package:tv_domain/src/domain/repositories/tv_repository.dart';
 class TvRepositoryImpl implements TvRepository {
   final TvRemoteDataSource remoteDataSource;
   final TvLocalDataSource localDataSource;
+  final CrashReporter? crashReporter;
 
   TvRepositoryImpl({
     required this.remoteDataSource,
     required this.localDataSource,
+    this.crashReporter,
   });
 
   @override
@@ -72,7 +75,17 @@ class TvRepositoryImpl implements TvRepository {
     try {
       final result = await remoteDataSource.getTvRecommendations(id);
       return Right(result.map((model) => model.toEntity()).toList());
-    } catch (e) {
+    } catch (e, s) {
+      await crashReporter?.recordNonFatal(
+        e,
+        s,
+        reason: 'unexpected_get_tv_recommendations_error',
+        keys: {
+          'feature': 'tv',
+          'entity_id': id,
+          'repository_method': 'getTvRecommendations',
+        },
+      );
       return Left(ServerFailure(e.toString()));
     }
   }
@@ -88,7 +101,18 @@ class TvRepositoryImpl implements TvRepository {
         seasonNumber,
       );
       return Right(result.toEntity());
-    } catch (e) {
+    } catch (e, s) {
+      await crashReporter?.recordNonFatal(
+        e,
+        s,
+        reason: 'unexpected_get_tv_season_detail_error',
+        keys: {
+          'feature': 'tv',
+          'entity_id': seriesId,
+          'season_number': seasonNumber,
+          'repository_method': 'getTvSeasonDetail',
+        },
+      );
       return Left(ServerFailure(''));
     }
   }
@@ -98,7 +122,17 @@ class TvRepositoryImpl implements TvRepository {
     try {
       final result = await remoteDataSource.searchTv(query);
       return Right(result.map((model) => model.toEntity()).toList());
-    } catch (e) {
+    } catch (e, s) {
+      await crashReporter?.recordNonFatal(
+        e,
+        s,
+        reason: 'unexpected_search_tv_error',
+        keys: {
+          'feature': 'tv',
+          'query_length': query.length,
+          'repository_method': 'searchTv',
+        },
+      );
       return Left(ServerFailure(e.toString()));
     }
   }

@@ -43,7 +43,7 @@ class SearchTvPage extends StatelessWidget {
                       padding: const EdgeInsets.all(8),
                       itemBuilder: (context, index) {
                         final tv = data.searchResult[index];
-                        return TvCard(tv);
+                        return TvCard(tv, sourceScreen: 'tv_search');
                       },
                       itemCount: result.length,
                     ),
