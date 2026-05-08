@@ -22,23 +22,28 @@ workflows:
     scripts:
       - name: Setup Melos
         script: |
+          cd "$CM_BUILD_DIR"
           dart pub global activate melos
           export PATH="$PATH":"$HOME/.pub-cache/bin"
           melos bootstrap
       - name: Analyze Workspace
         script: |
+          cd "$CM_BUILD_DIR"
           export PATH="$PATH":"$HOME/.pub-cache/bin"
           flutter analyze
       - name: Run Workspace Tests
         script: |
+          cd "$CM_BUILD_DIR"
           export PATH="$PATH":"$HOME/.pub-cache/bin"
           melos run test
       - name: Collect Coverage
         script: |
+          cd "$CM_BUILD_DIR"
           export PATH="$PATH":"$HOME/.pub-cache/bin"
           melos coverage
       - name: Build Android APK
         script: |
+          cd "$CM_BUILD_DIR"
           flutter build apk --release
     artifacts:
       - build/app/outputs/flutter-apk/*.apk
