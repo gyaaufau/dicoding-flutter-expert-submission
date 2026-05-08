@@ -36,12 +36,6 @@ workflows:
           REPO_ROOT="$(git rev-parse --show-toplevel)"
           cd "$REPO_ROOT"
           dart run melos exec --fail-fast --dir-exists=test -- flutter test
-      - name: Collect Coverage
-        script: |
-          REPO_ROOT="$(git rev-parse --show-toplevel)"
-          cd "$REPO_ROOT"
-          dart run tool/collect_coverage.dart
-          dart run tool/merge_coverage.dart
       - name: Build Android APK
         script: |
           REPO_ROOT="$(git rev-parse --show-toplevel)"
@@ -49,7 +43,6 @@ workflows:
           flutter build apk --release
     artifacts:
       - build/app/outputs/flutter-apk/*.apk
-      - coverage/lcov.info
     publishing:
       email:
         recipients:
@@ -57,3 +50,39 @@ workflows:
         notify:
           success: true
           failure: true
+
+  ios_ci:
+    name: Ditonton iOS CI
+    max_build_duration: 60
+    environment:
+      flutter: stable
+      xcode: latest
+      java: 17
+    cache:
+      cache_paths:
+        - $FLUTTER_ROOT/.pub-cache
+        - ~/.gradle/caches
+        - ~/.gradle/wrapper
+        - ~/Library/Caches/CocoaPods
+    scripts:
+      - name: Setup Melos
+        script: |
+          REPO_ROOT="$(git rev-parse --show-toplevel)"
+          cd "$REPO_ROOT"
+          flutter pub get
+          dart run melos bootstrap
+      - name: Analyze Workspace
+        script: |
+          REPO_ROOT="$(git rev-parse --show-toplevel)"
+          cd "$REPO_ROOT"
+          flutter analyze --no-fatal-infos --no-fatal-warnings
+      - name: Run Workspace Tests
+        script: |
+          REPO_ROOT="$(git rev-parse --show-toplevel)"
+          cd "$REPO_ROOT"
+          dart run melos exec --fail-fast --dir-exists=test -- flutter test
+      - name: Build iOS App
+        script: |
+          REPO_ROOT="$(git rev-parse --show-toplevel)"
+          cd "$REPO_ROOT"
+          flutter build ios --release --no-codesign
