@@ -1,3 +1,4 @@
+import 'package:core/core.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
@@ -23,7 +24,13 @@ StatefulShellBranch buildTvBranch() {
       GoRoute(
         path: TvPage.ROUTE_NAME,
         name: TvRouteNames.home,
-        builder: (context, state) => const TvPage(),
+        builder: (context, state) => AppRouteTrackingScope(
+          routeName: state.name ?? TvRouteNames.home,
+          screenName: 'tv_home',
+          feature: 'tv',
+          contentType: 'tv',
+          child: const TvPage(),
+        ),
       ),
     ],
   );
@@ -34,12 +41,24 @@ List<RouteBase> buildTvRoutes({required Widget invalidIdPage}) {
     GoRoute(
       path: PopularTvPage.ROUTE_NAME,
       name: TvRouteNames.popular,
-      builder: (context, state) => const PopularTvPage(),
+      builder: (context, state) => AppRouteTrackingScope(
+        routeName: state.name ?? TvRouteNames.popular,
+        screenName: 'tv_popular',
+        feature: 'tv',
+        contentType: 'tv',
+        child: const PopularTvPage(),
+      ),
     ),
     GoRoute(
       path: TopRatedTvPage.ROUTE_NAME,
       name: TvRouteNames.topRated,
-      builder: (context, state) => const TopRatedTvPage(),
+      builder: (context, state) => AppRouteTrackingScope(
+        routeName: state.name ?? TvRouteNames.topRated,
+        screenName: 'tv_top_rated',
+        feature: 'tv',
+        contentType: 'tv',
+        child: const TopRatedTvPage(),
+      ),
     ),
     GoRoute(
       path: TvDetailPage.routeName,
@@ -49,13 +68,26 @@ List<RouteBase> buildTvRoutes({required Widget invalidIdPage}) {
         if (id == null) {
           return invalidIdPage;
         }
-        return TvDetailPage(id: id);
+        return AppRouteTrackingScope(
+          routeName: state.name ?? TvRouteNames.detail,
+          screenName: 'tv_detail',
+          feature: 'tv',
+          contentType: 'tv',
+          contentId: id,
+          child: TvDetailPage(id: id),
+        );
       },
     ),
     GoRoute(
       path: SearchTvPage.ROUTE_NAME,
       name: TvRouteNames.search,
-      builder: (context, state) => const SearchTvPage(),
+      builder: (context, state) => AppRouteTrackingScope(
+        routeName: state.name ?? TvRouteNames.search,
+        screenName: 'tv_search',
+        feature: 'tv',
+        contentType: 'tv',
+        child: const SearchTvPage(),
+      ),
     ),
   ];
 }

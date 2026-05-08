@@ -1,3 +1,4 @@
+import 'package:core/core.dart';
 import 'package:go_router/go_router.dart';
 
 import '../pages/about_page.dart';
@@ -16,7 +17,13 @@ StatefulShellBranch buildProfileBranch() {
       GoRoute(
         path: ProfilePage.routeName,
         name: ProfileRouteNames.home,
-        builder: (context, state) => const ProfilePage(),
+        builder: (context, state) => AppRouteTrackingScope(
+          routeName: state.name ?? ProfileRouteNames.home,
+          screenName: 'profile_home',
+          feature: 'profile',
+          contentType: 'profile',
+          child: const ProfilePage(),
+        ),
       ),
     ],
   );
@@ -27,7 +34,13 @@ List<RouteBase> buildProfileRoutes() {
     GoRoute(
       path: AboutPage.routeName,
       name: ProfileRouteNames.about,
-      builder: (context, state) => const AboutPage(),
+      builder: (context, state) => AppRouteTrackingScope(
+        routeName: state.name ?? ProfileRouteNames.about,
+        screenName: 'profile_about',
+        feature: 'profile',
+        contentType: 'profile',
+        child: const AboutPage(),
+      ),
     ),
   ];
 }

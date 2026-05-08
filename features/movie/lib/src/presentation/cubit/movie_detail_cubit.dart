@@ -1,4 +1,7 @@
+import 'dart:async';
+
 import 'package:common/common.dart';
+import 'package:core/core.dart';
 import 'package:dependencies/dependencies.dart';
 import 'package:movie_domain/movie_domain.dart';
 
@@ -73,6 +76,10 @@ class MovieDetailCubit extends Cubit<MovieDetailState> {
   final RemoveWatchlist removeWatchlist;
 
   Future<void> fetchMovieDetail(int id) async {
+    _recordMovieBreadcrumb(
+      'Open movie detail',
+      keys: {'feature': 'movie', 'entity_id': id},
+    );
     emit(state.copyWith(movieState: RequestState.Loading));
 
     final detailResult = await getMovieDetail.call(id);
@@ -86,6 +93,14 @@ class MovieDetailCubit extends Cubit<MovieDetailState> {
         ),
       ),
       (movie) {
+        _logMovieAnalyticsEvent(
+          'movie_detail_viewed',
+          params: {
+            'feature': 'movie',
+            'content_type': 'movie',
+            'content_id': movie.id,
+          },
+        );
         emit(
           state.copyWith(
             movie: movie,
@@ -114,6 +129,10 @@ class MovieDetailCubit extends Cubit<MovieDetailState> {
   }
 
   Future<void> addWatchlist(MovieDetail movie) async {
+    _recordMovieBreadcrumb(
+      'Add movie watchlist',
+      keys: {'feature': 'movie', 'entity_id': movie.id},
+    );
     final result = await saveWatchlist.call(movie);
 
     final message = result.fold(
@@ -121,17 +140,43 @@ class MovieDetailCubit extends Cubit<MovieDetailState> {
       (successMessage) => successMessage,
     );
 
+    if (message == watchlistAddSuccessMessage) {
+      _logMovieAnalyticsEvent(
+        'watchlist_added',
+        params: {
+          'feature': 'movie',
+          'content_type': 'movie',
+          'content_id': movie.id,
+        },
+      );
+    }
+
     emit(state.copyWith(watchlistMessage: message));
     await loadWatchlistStatus(movie.id);
   }
 
   Future<void> removeFromWatchlist(MovieDetail movie) async {
+    _recordMovieBreadcrumb(
+      'Remove movie watchlist',
+      keys: {'feature': 'movie', 'entity_id': movie.id},
+    );
     final result = await removeWatchlist.call(movie);
 
     final message = result.fold(
       (failure) => failure.message,
       (successMessage) => successMessage,
     );
+
+    if (message == watchlistRemoveSuccessMessage) {
+      _logMovieAnalyticsEvent(
+        'watchlist_removed',
+        params: {
+          'feature': 'movie',
+          'content_type': 'movie',
+          'content_id': movie.id,
+        },
+      );
+    }
 
     emit(state.copyWith(watchlistMessage: message));
     await loadWatchlistStatus(movie.id);
@@ -141,4 +186,24 @@ class MovieDetailCubit extends Cubit<MovieDetailState> {
     final result = await getWatchListStatus.call(id);
     emit(state.copyWith(isAddedToWatchlist: result));
   }
+}
+
+void _recordMovieBreadcrumb(
+  String message, {
+  Map<String, Object?> keys = const {},
+}) {
+  if (!locator.isRegistered<CrashReporter>()) {
+    return;
+  }
+  unawaited(locator<CrashReporter>().recordBreadcrumb(message, keys: keys));
+}
+
+void _logMovieAnalyticsEvent(
+  String name, {
+  Map<String, Object?> params = const {},
+}) {
+  if (!locator.isRegistered<AnalyticsTracker>()) {
+    return;
+  }
+  unawaited(locator<AnalyticsTracker>().logEvent(name, params: params));
 }

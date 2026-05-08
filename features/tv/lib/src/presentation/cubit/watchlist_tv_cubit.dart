@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:common/common.dart';
 import 'package:core/core.dart';
 import 'package:equatable/equatable.dart';
@@ -89,6 +91,12 @@ class WatchlistTvCubit extends Cubit<WatchlistTvState> {
   Future<void> addWatchlist(TvDetail tv) async {
     final result = await saveWatchlistTv.call(tv);
     final message = _foldWatchlistMessage(result);
+    if (message == watchlistAddSuccessMessage) {
+      _logTvAnalyticsEvent(
+        'watchlist_added',
+        params: {'feature': 'tv', 'content_type': 'tv', 'content_id': tv.id},
+      );
+    }
     emit(state.copyWith(watchlistMessage: message));
     await loadWatchlistStatus(tv.id);
   }
@@ -96,6 +104,12 @@ class WatchlistTvCubit extends Cubit<WatchlistTvState> {
   Future<void> removeFromWatchlist(TvDetail tv) async {
     final result = await removeWatchlistTv.call(tv);
     final message = _foldWatchlistMessage(result);
+    if (message == watchlistRemoveSuccessMessage) {
+      _logTvAnalyticsEvent(
+        'watchlist_removed',
+        params: {'feature': 'tv', 'content_type': 'tv', 'content_id': tv.id},
+      );
+    }
     emit(state.copyWith(watchlistMessage: message));
     await loadWatchlistStatus(tv.id);
   }
@@ -106,4 +120,14 @@ class WatchlistTvCubit extends Cubit<WatchlistTvState> {
       (successMessage) => successMessage,
     );
   }
+}
+
+void _logTvAnalyticsEvent(
+  String name, {
+  Map<String, Object?> params = const {},
+}) {
+  if (!locator.isRegistered<AnalyticsTracker>()) {
+    return;
+  }
+  unawaited(locator<AnalyticsTracker>().logEvent(name, params: params));
 }

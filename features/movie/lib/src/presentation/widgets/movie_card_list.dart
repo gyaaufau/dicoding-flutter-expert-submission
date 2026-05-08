@@ -1,5 +1,8 @@
+import 'dart:async';
+
 import 'package:common/common.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:core/core.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:movie_domain/movie_domain.dart';
@@ -7,9 +10,10 @@ import 'package:movie_domain/movie_domain.dart';
 import '../routes/movie_routes.dart';
 
 class MovieCard extends StatelessWidget {
-  const MovieCard(this.movie, {super.key});
+  const MovieCard(this.movie, {super.key, this.sourceScreen});
 
   final Movie movie;
+  final String? sourceScreen;
 
   @override
   Widget build(BuildContext context) {
@@ -17,6 +21,20 @@ class MovieCard extends StatelessWidget {
       margin: const EdgeInsets.symmetric(vertical: 4),
       child: InkWell(
         onTap: () {
+          if (sourceScreen != null &&
+              locator.isRegistered<AnalyticsTracker>()) {
+            unawaited(
+              locator<AnalyticsTracker>().logEvent(
+                'search_result_opened',
+                params: {
+                  'feature': 'movie',
+                  'content_type': 'movie',
+                  'content_id': movie.id,
+                  'source_screen': sourceScreen,
+                },
+              ),
+            );
+          }
           context.pushNamed(MovieRouteNames.detail, extra: movie.id);
         },
         child: Stack(

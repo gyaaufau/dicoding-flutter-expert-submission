@@ -41,8 +41,10 @@ class SearchMoviePage extends StatelessWidget {
                     child: ListView.builder(
                       padding: const EdgeInsets.all(8),
                       itemCount: data.searchResult.length,
-                      itemBuilder: (context, index) =>
-                          MovieCard(data.searchResult[index]),
+                      itemBuilder: (context, index) => MovieCard(
+                        data.searchResult[index],
+                        sourceScreen: 'movie_search',
+                      ),
                     ),
                   );
                 } else {

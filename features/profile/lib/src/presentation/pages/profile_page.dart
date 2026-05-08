@@ -1,6 +1,6 @@
 import 'package:common/common.dart';
+import 'package:dependencies/dependencies.dart';
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
 
 import 'about_page.dart';
 
@@ -58,6 +58,12 @@ class ProfilePage extends StatelessWidget {
                 ],
               ),
             ),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              FirebaseCrashlytics.instance.crash();
+            },
+            child: const Text('Test Crash'),
           ),
           const SizedBox(height: 16),
           Card(

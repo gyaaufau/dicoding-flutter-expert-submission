@@ -1,4 +1,7 @@
+import 'dart:async';
+
 import 'package:common/common.dart';
+import 'package:core/core.dart';
 import 'package:dependencies/dependencies.dart';
 import 'package:movie_domain/movie_domain.dart';
 
@@ -36,6 +39,14 @@ class MovieSearchCubit extends Cubit<MovieSearchState> {
   final SearchMovies searchMovies;
 
   Future<void> fetchMovieSearch(String query) async {
+    _logMovieAnalyticsEvent(
+      'search_submitted',
+      params: {
+        'feature': 'movie',
+        'content_type': 'movie',
+        'query_length': query.length,
+      },
+    );
     emit(state.copyWith(state: RequestState.Loading));
 
     final result = await searchMovies.call(query);
@@ -47,4 +58,14 @@ class MovieSearchCubit extends Cubit<MovieSearchState> {
           emit(state.copyWith(state: RequestState.Loaded, searchResult: data)),
     );
   }
+}
+
+void _logMovieAnalyticsEvent(
+  String name, {
+  Map<String, Object?> params = const {},
+}) {
+  if (!locator.isRegistered<AnalyticsTracker>()) {
+    return;
+  }
+  unawaited(locator<AnalyticsTracker>().logEvent(name, params: params));
 }

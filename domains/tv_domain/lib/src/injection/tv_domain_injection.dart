@@ -29,6 +29,7 @@ void registerTvDomainDependencies(GetIt locator) {
     () => TvRepositoryImpl(
       remoteDataSource: locator(),
       localDataSource: locator(),
+      crashReporter: locator(),
     ),
   );
 

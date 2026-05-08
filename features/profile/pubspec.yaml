@@ -13,6 +13,8 @@ dependencies:
 
   common:
     path: ../../shared_libraries/common
+  core:
+    path: ../../shared_libraries/core
   dependencies:
     path: ../../shared_libraries/dependencies
 

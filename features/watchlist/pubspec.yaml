@@ -19,6 +19,8 @@ dependencies:
 
   common:
     path: ../../shared_libraries/common
+  core:
+    path: ../../shared_libraries/core
   flutter_bloc: ^9.1.1
   go_router: ^17.2.2
 

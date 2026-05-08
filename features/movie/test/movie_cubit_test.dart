@@ -7,6 +7,34 @@ import 'package:movie_domain/movie_domain.dart';
 
 import 'dummy_data/dummy_objects.dart';
 
+class FakeAnalyticsTracker implements AnalyticsTracker {
+  final List<(String, Map<String, Object?>)> events = [];
+
+  @override
+  Future<void> logEvent(
+    String name, {
+    Map<String, Object?> params = const {},
+  }) async {
+    events.add((name, params));
+  }
+
+  @override
+  Future<void> logScreenView({
+    required String screenName,
+    String? feature,
+    Map<String, Object?> params = const {},
+  }) async {}
+
+  @override
+  Future<void> setAnalyticsCollectionEnabled(bool enabled) async {}
+
+  @override
+  Future<void> setUserProperty({
+    required String name,
+    required String? value,
+  }) async {}
+}
+
 class FakeMovieRepository implements MovieRepository {
   Future<Either<Failure, List<Movie>>> Function()? onGetNowPlayingMovies;
   Future<Either<Failure, List<Movie>>> Function()? onGetPopularMovies;
@@ -63,41 +91,51 @@ class FakeMovieRepository implements MovieRepository {
 
 void main() {
   late FakeMovieRepository repository;
+  late FakeAnalyticsTracker analyticsTracker;
 
   setUp(() {
     repository = FakeMovieRepository();
+    analyticsTracker = FakeAnalyticsTracker();
+    locator.registerSingleton<AnalyticsTracker>(analyticsTracker);
   });
 
-  test('should emit [Loading, Loaded] when now playing data is gotten', () async {
-    // arrange
-    repository.onGetNowPlayingMovies = () async => Right(testMovieList);
-    final cubit = MovieListCubit(
-      getNowPlayingMovies: GetNowPlayingMovies(repository),
-      getPopularMovies: GetPopularMovies(repository),
-      getTopRatedMovies: GetTopRatedMovies(repository),
-    );
-
-    // act
-    final expectation = expectLater(
-      cubit.stream,
-      emitsInOrder([
-        const MovieListState(nowPlayingState: RequestState.Loading),
-        MovieListState(
-          nowPlayingMovies: <Movie>[testMovie],
-          nowPlayingState: RequestState.Loaded,
-        ),
-      ]),
-    );
-    await cubit.fetchNowPlayingMovies();
-
-    // assert
-    await expectation;
+  tearDown(() async {
+    await locator.reset();
   });
+
+  test(
+    'should emit [Loading, Loaded] when now playing data is gotten',
+    () async {
+      // arrange
+      repository.onGetNowPlayingMovies = () async => Right(testMovieList);
+      final cubit = MovieListCubit(
+        getNowPlayingMovies: GetNowPlayingMovies(repository),
+        getPopularMovies: GetPopularMovies(repository),
+        getTopRatedMovies: GetTopRatedMovies(repository),
+      );
+
+      // act
+      final expectation = expectLater(
+        cubit.stream,
+        emitsInOrder([
+          const MovieListState(nowPlayingState: RequestState.Loading),
+          MovieListState(
+            nowPlayingMovies: <Movie>[testMovie],
+            nowPlayingState: RequestState.Loaded,
+          ),
+        ]),
+      );
+      await cubit.fetchNowPlayingMovies();
+
+      // assert
+      await expectation;
+    },
+  );
 
   test('should emit [Loading, Error] when search is unsuccessful', () async {
     // arrange
-    repository.onSearchMovies =
-        (_) async => Left(ServerFailure('Failed to search'));
+    repository.onSearchMovies = (_) async =>
+        Left(ServerFailure('Failed to search'));
     final cubit = MovieSearchCubit(searchMovies: SearchMovies(repository));
 
     // act
@@ -115,6 +153,8 @@ void main() {
 
     // assert
     await expectation;
+    expect(analyticsTracker.events.single.$1, 'search_submitted');
+    expect(analyticsTracker.events.single.$2['query_length'], 9);
   });
 
   test('should emit [Loading, Loaded] when watchlist data is gotten', () async {
@@ -177,6 +217,35 @@ void main() {
 
       // assert
       await expectation;
+      expect(analyticsTracker.events.single.$1, 'movie_detail_viewed');
+      expect(analyticsTracker.events.single.$2['content_id'], 1);
+    },
+  );
+
+  test(
+    'should log watchlist_added when save watchlist is successful',
+    () async {
+      // arrange
+      repository.onSaveWatchlist = (_) async =>
+          Right(MovieDetailCubit.watchlistAddSuccessMessage);
+      repository.onIsAddedToWatchlist = (_) async => true;
+      final cubit = MovieDetailCubit(
+        getMovieDetail: GetMovieDetail(repository),
+        getMovieRecommendations: GetMovieRecommendations(repository),
+        getWatchListStatus: GetWatchListStatus(repository),
+        saveWatchlist: SaveWatchlist(repository),
+        removeWatchlist: RemoveWatchlist(repository),
+      );
+
+      // act
+      await cubit.addWatchlist(testMovieDetail);
+
+      // assert
+      expect(analyticsTracker.events.single.$1, 'watchlist_added');
+      expect(
+        analyticsTracker.events.single.$2['content_id'],
+        testMovieDetail.id,
+      );
     },
   );
 }

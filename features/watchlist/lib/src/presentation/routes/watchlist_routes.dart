@@ -1,3 +1,4 @@
+import 'package:core/core.dart';
 import 'package:go_router/go_router.dart';
 
 import '../pages/watchlist_movies_page.dart';
@@ -14,7 +15,13 @@ StatefulShellBranch buildWatchlistBranch() {
       GoRoute(
         path: WatchlistMoviesPage.ROUTE_NAME,
         name: WatchlistRouteNames.home,
-        builder: (context, state) => const WatchlistMoviesPage(),
+        builder: (context, state) => AppRouteTrackingScope(
+          routeName: state.name ?? WatchlistRouteNames.home,
+          screenName: 'watchlist_home',
+          feature: 'watchlist',
+          contentType: 'watchlist',
+          child: const WatchlistMoviesPage(),
+        ),
       ),
     ],
   );

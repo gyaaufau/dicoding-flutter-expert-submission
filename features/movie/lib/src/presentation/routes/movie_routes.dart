@@ -1,3 +1,4 @@
+import 'package:core/core.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
@@ -23,7 +24,13 @@ StatefulShellBranch buildMovieBranch() {
       GoRoute(
         path: HomeMoviePage.ROUTE_NAME,
         name: MovieRouteNames.home,
-        builder: (context, state) => const HomeMoviePage(),
+        builder: (context, state) => AppRouteTrackingScope(
+          routeName: state.name ?? MovieRouteNames.home,
+          screenName: 'movie_home',
+          feature: 'movie',
+          contentType: 'movie',
+          child: const HomeMoviePage(),
+        ),
       ),
     ],
   );
@@ -34,12 +41,24 @@ List<RouteBase> buildMovieRoutes({required Widget invalidIdPage}) {
     GoRoute(
       path: PopularMoviesPage.ROUTE_NAME,
       name: MovieRouteNames.popular,
-      builder: (context, state) => const PopularMoviesPage(),
+      builder: (context, state) => AppRouteTrackingScope(
+        routeName: state.name ?? MovieRouteNames.popular,
+        screenName: 'movie_popular',
+        feature: 'movie',
+        contentType: 'movie',
+        child: const PopularMoviesPage(),
+      ),
     ),
     GoRoute(
       path: TopRatedMoviesPage.ROUTE_NAME,
       name: MovieRouteNames.topRated,
-      builder: (context, state) => const TopRatedMoviesPage(),
+      builder: (context, state) => AppRouteTrackingScope(
+        routeName: state.name ?? MovieRouteNames.topRated,
+        screenName: 'movie_top_rated',
+        feature: 'movie',
+        contentType: 'movie',
+        child: const TopRatedMoviesPage(),
+      ),
     ),
     GoRoute(
       path: MovieDetailPage.ROUTE_NAME,
@@ -49,13 +68,26 @@ List<RouteBase> buildMovieRoutes({required Widget invalidIdPage}) {
         if (id == null) {
           return invalidIdPage;
         }
-        return MovieDetailPage(id: id);
+        return AppRouteTrackingScope(
+          routeName: state.name ?? MovieRouteNames.detail,
+          screenName: 'movie_detail',
+          feature: 'movie',
+          contentType: 'movie',
+          contentId: id,
+          child: MovieDetailPage(id: id),
+        );
       },
     ),
     GoRoute(
       path: SearchMoviePage.ROUTE_NAME,
       name: MovieRouteNames.search,
-      builder: (context, state) => const SearchMoviePage(),
+      builder: (context, state) => AppRouteTrackingScope(
+        routeName: state.name ?? MovieRouteNames.search,
+        screenName: 'movie_search',
+        feature: 'movie',
+        contentType: 'movie',
+        child: const SearchMoviePage(),
+      ),
     ),
   ];
 }

@@ -3,6 +3,7 @@ import 'dart:io';
 
 import 'package:dartz/dartz.dart';
 import 'package:common/common.dart';
+import 'package:core/core.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mockito/mockito.dart';
 import 'package:tv_domain/tv_domain.dart';
@@ -11,22 +12,64 @@ import '../../dummy_data/dummy_objects.dart';
 import '../../helpers/test_helper.mocks.dart';
 import '../../json_reader.dart';
 
+class FakeCrashReporter implements CrashReporter {
+  final List<Object> nonFatalErrors = [];
+
+  @override
+  Future<void> recordBreadcrumb(
+    String message, {
+    Map<String, Object?> keys = const {},
+  }) async {}
+
+  @override
+  Future<void> recordFatal(
+    Object error,
+    StackTrace stackTrace, {
+    String? reason,
+    Map<String, Object?> keys = const {},
+  }) async {}
+
+  @override
+  Future<void> recordFlutterFatalError(details) async {}
+
+  @override
+  Future<void> recordNonFatal(
+    Object error,
+    StackTrace stackTrace, {
+    String? reason,
+    Map<String, Object?> keys = const {},
+  }) async {
+    nonFatalErrors.add(error);
+  }
+
+  @override
+  Future<void> setCollectionEnabled(bool enabled) async {}
+
+  @override
+  Future<void> setContextKey(String key, Object value) async {}
+}
+
 void main() {
   late TvRepositoryImpl repository;
   late MockTvRemoteDataSource mockRemoteDataSource;
   late MockTvLocalDataSource mockLocalDataSource;
+  late FakeCrashReporter crashReporter;
 
   setUp(() {
     mockRemoteDataSource = MockTvRemoteDataSource();
     mockLocalDataSource = MockTvLocalDataSource();
+    crashReporter = FakeCrashReporter();
     repository = TvRepositoryImpl(
       remoteDataSource: mockRemoteDataSource,
       localDataSource: mockLocalDataSource,
+      crashReporter: crashReporter,
     );
   });
 
-  final tTvListDto = (json.decode(readJson('dummy_data/tv_on_the_air.json'))
-          as Map<String, dynamic>)['results'] as List<dynamic>;
+  final tTvListDto =
+      (json.decode(readJson('dummy_data/tv_on_the_air.json'))
+              as Map<String, dynamic>)['results']
+          as List<dynamic>;
   final tvDtoList = tTvListDto
       .map((item) => TvListDto.fromJson(item as Map<String, dynamic>))
       .toList();
@@ -44,64 +87,89 @@ void main() {
     overview: 'overview',
   );
 
-  test('should return tv list when remote data source call is successful', () async {
-    // arrange
-    when(mockRemoteDataSource.getOnTheAirTv())
-        .thenAnswer((_) async => tvDtoList);
+  test(
+    'should return tv list when remote data source call is successful',
+    () async {
+      // arrange
+      when(
+        mockRemoteDataSource.getOnTheAirTv(),
+      ).thenAnswer((_) async => tvDtoList);
 
-    // act
-    final result = await repository.getOnTheAirTv();
+      // act
+      final result = await repository.getOnTheAirTv();
 
-    // assert
-    verify(mockRemoteDataSource.getOnTheAirTv());
-    final resultList = result.getOrElse(() => []);
-    expect(resultList, tTvList);
-  });
+      // assert
+      verify(mockRemoteDataSource.getOnTheAirTv());
+      final resultList = result.getOrElse(() => []);
+      expect(resultList, tTvList);
+    },
+  );
 
-  test('should return ServerFailure when remote data source throws server exception', () async {
-    // arrange
-    when(mockRemoteDataSource.getPopularTv()).thenThrow(ServerException());
+  test(
+    'should return ServerFailure when remote data source throws server exception',
+    () async {
+      // arrange
+      when(mockRemoteDataSource.getPopularTv()).thenThrow(ServerException());
 
-    // act
-    final result = await repository.getPopularTv();
+      // act
+      final result = await repository.getPopularTv();
 
-    // assert
-    expect(result, Left(ServerFailure('')));
-  });
+      // assert
+      expect(result, Left(ServerFailure('')));
+    },
+  );
 
-  test('should return ConnectionFailure when remote data source throws socket exception', () async {
-    // arrange
-    when(mockRemoteDataSource.getTopRatedTv()).thenThrow(const SocketException('Failed to connect to the network'));
+  test(
+    'should return ConnectionFailure when remote data source throws socket exception',
+    () async {
+      // arrange
+      when(
+        mockRemoteDataSource.getTopRatedTv(),
+      ).thenThrow(const SocketException('Failed to connect to the network'));
 
-    // act
-    final result = await repository.getTopRatedTv();
+      // act
+      final result = await repository.getTopRatedTv();
 
-    // assert
-    expect(result, Left(ConnectionFailure('Failed to connect to the network')));
-  });
+      // assert
+      expect(
+        result,
+        Left(ConnectionFailure('Failed to connect to the network')),
+      );
+      expect(crashReporter.nonFatalErrors, isEmpty);
+    },
+  );
 
-  test('should return tv detail when call to data source is successful', () async {
-    // arrange
-    when(mockRemoteDataSource.getTvDetail(1)).thenAnswer((_) async => tTvDetail);
+  test(
+    'should return tv detail when call to data source is successful',
+    () async {
+      // arrange
+      when(
+        mockRemoteDataSource.getTvDetail(1),
+      ).thenAnswer((_) async => tTvDetail);
 
-    // act
-    final result = await repository.getTvDetail(1);
+      // act
+      final result = await repository.getTvDetail(1);
 
-    // assert
-    expect(result, Right(tTvDetail.toEntity()));
-  });
+      // assert
+      expect(result, Right(tTvDetail.toEntity()));
+    },
+  );
 
-  test('should return tv season detail when call to data source is successful', () async {
-    // arrange
-    when(mockRemoteDataSource.getTvSeasonDetail(1, 1))
-        .thenAnswer((_) async => tTvSeasonDetail);
+  test(
+    'should return tv season detail when call to data source is successful',
+    () async {
+      // arrange
+      when(
+        mockRemoteDataSource.getTvSeasonDetail(1, 1),
+      ).thenAnswer((_) async => tTvSeasonDetail);
 
-    // act
-    final result = await repository.getTvSeasonDetail(1, 1);
+      // act
+      final result = await repository.getTvSeasonDetail(1, 1);
 
-    // assert
-    expect(result, Right(tTvSeasonDetail.toEntity()));
-  });
+      // assert
+      expect(result, Right(tTvSeasonDetail.toEntity()));
+    },
+  );
 
   test('should return watchlist status when data is found', () async {
     // arrange
@@ -116,8 +184,9 @@ void main() {
 
   test('should return watchlist tv list', () async {
     // arrange
-    when(mockLocalDataSource.getWatchlistTv())
-        .thenAnswer((_) async => <TvTable>[tTvTable]);
+    when(
+      mockLocalDataSource.getWatchlistTv(),
+    ).thenAnswer((_) async => <TvTable>[tTvTable]);
 
     // act
     final result = await repository.getWatchlistTv();
@@ -126,4 +195,28 @@ void main() {
     final resultList = result.getOrElse(() => []);
     expect(resultList, <Tv>[testWatchlistTv]);
   });
+
+  test(
+    'should record non fatal error for unexpected search exception',
+    () async {
+      when(mockRemoteDataSource.searchTv('lost')).thenThrow(Exception('boom'));
+
+      final result = await repository.searchTv('lost');
+
+      expect(result, Left(ServerFailure('Exception: boom')));
+      expect(crashReporter.nonFatalErrors.length, 1);
+    },
+  );
+
+  test(
+    'should not record non fatal error for expected server failure',
+    () async {
+      when(mockRemoteDataSource.getPopularTv()).thenThrow(ServerException());
+
+      final result = await repository.getPopularTv();
+
+      expect(result, Left(ServerFailure('')));
+      expect(crashReporter.nonFatalErrors, isEmpty);
+    },
+  );
 }
