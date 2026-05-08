@@ -72,4 +72,35 @@ void main() {
     expect(find.byType(PageView), findsOneWidget);
     expect(find.byType(AnimatedContainer), findsNWidgets(2));
   });
+
+  testWidgets('banner should stay stable on compact height', (tester) async {
+    // arrange
+    final widget = CarousellBannerWidget(
+      height: 220,
+      items: [
+        const CarousellBannerItem(
+          title: 'Spider-Man Across the Spider-Verse Extended Title',
+          imagePath: 'https://example.com/poster.jpg',
+          overview:
+              'Long compact overview that should be hidden to prevent overflow.',
+          rating: 8.4,
+          genreLabels: ['Action', 'Adventure', 'Animation'],
+          durationText: '140 min',
+        ),
+      ],
+    );
+
+    // act
+    await tester.pumpWidget(makeTestableWidget(widget));
+
+    // assert
+    expect(tester.takeException(), isNull);
+    expect(find.text('Watch Now'), findsOneWidget);
+    expect(
+      find.text(
+        'Long compact overview that should be hidden to prevent overflow.',
+      ),
+      findsNothing,
+    );
+  });
 }
