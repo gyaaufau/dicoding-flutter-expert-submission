@@ -1,0 +1,52 @@
+workflows:
+  android_ci:
+    name: Ditonton Android CI
+    max_build_duration: 60
+    triggering:
+      events:
+        - push
+        - pull_request
+      branch_patterns:
+        - pattern: main
+          include: true
+          source: true
+    environment:
+      flutter: stable
+      xcode: latest
+      java: 17
+    cache:
+      cache_paths:
+        - $FLUTTER_ROOT/.pub-cache
+        - ~/.gradle/caches
+        - ~/.gradle/wrapper
+    scripts:
+      - name: Setup Melos
+        script: |
+          dart pub global activate melos
+          export PATH="$PATH":"$HOME/.pub-cache/bin"
+          melos bootstrap
+      - name: Analyze Workspace
+        script: |
+          export PATH="$PATH":"$HOME/.pub-cache/bin"
+          flutter analyze
+      - name: Run Workspace Tests
+        script: |
+          export PATH="$PATH":"$HOME/.pub-cache/bin"
+          melos run test
+      - name: Collect Coverage
+        script: |
+          export PATH="$PATH":"$HOME/.pub-cache/bin"
+          melos coverage
+      - name: Build Android APK
+        script: |
+          flutter build apk --release
+    artifacts:
+      - build/app/outputs/flutter-apk/*.apk
+      - coverage/lcov.info
+    publishing:
+      email:
+        recipients:
+          - argyaauliaf@gmail.com
+        notify:
+          success: true
+          failure: true
