@@ -1,3 +1,4 @@
+import 'package:core/src/network/ssl-pinning-network.dart';
 import 'package:dependencies/dependencies.dart' as dep;
 
 import '../analytics/analytics_tracker.dart';
@@ -7,9 +8,12 @@ import '../crashlytics/crash_reporter.dart';
 import '../network/network_info.dart';
 import 'locator.dart';
 
-void registerCoreDependencies() {
+Future<void> registerCoreDependencies({dep.Client? sslPinningClient}) async {
   locator.registerLazySingleton<NetworkInfo>(() => NetworkInfoImpl(locator()));
-  locator.registerLazySingleton(() => dep.Client());
+
+  final pinnedClient = sslPinningClient ?? await SslPinningHttpClient.create();
+  locator.registerLazySingleton(() => pinnedClient);
+
   locator.registerLazySingleton(() => dep.DataConnectionChecker());
   locator.registerLazySingleton<AppInfoProvider>(
     () => PackageAppInfoProvider(),

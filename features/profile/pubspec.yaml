@@ -18,8 +18,6 @@ dependencies:
   dependencies:
     path: ../../shared_libraries/dependencies
 
-  resources:
-    path: ../../resources
   go_router: ^17.2.2
 
 dev_dependencies:

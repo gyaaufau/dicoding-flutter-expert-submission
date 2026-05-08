@@ -5,8 +5,8 @@ import 'package:tv/tv.dart';
 import 'package:tv_domain/tv_domain.dart';
 
 class AppInjection {
-  static void init() {
-    registerCoreDependencies();
+  static Future<void> init() async {
+    await registerCoreDependencies();
     registerMovieDomainDependencies(locator);
     registerTvDomainDependencies(locator);
     registerMovieFeatureDependencies(locator);

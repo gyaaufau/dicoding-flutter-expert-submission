@@ -5,7 +5,6 @@ packages:
   - domains/**
   - features/**
   - shared_libraries/**
-  - resources
 
 scripts:
   test:
@@ -13,7 +12,7 @@ scripts:
     description: Jalankan semua test di workspace.
 
   coverage:collect:
-    run: melos exec --fail-fast --dir-exists=test -- flutter test --coverage
+    run: dart run tool/collect_coverage.dart
     description: Generate coverage per package.
 
   coverage:merge:

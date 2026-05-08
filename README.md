@@ -54,7 +54,7 @@ coverage/lcov.info
   - `common` utility/helper umum
   - `core` komponen inti, base class, dan shared service
   - `dependencies` registrasi dependency lintas package
-- `resources/` aset bersama dan resource package yang dipakai banyak module
+- `assets/` aset global aplikasi yang dibundle dari root project
 - `tool/` script bantu workspace, termasuk merge coverage
 - `android/` dan `ios/` target platform Flutter
 - `coverage/` output laporan coverage gabungan workspace
