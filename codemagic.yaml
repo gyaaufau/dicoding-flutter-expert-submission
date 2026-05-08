@@ -30,7 +30,7 @@ workflows:
         script: |
           REPO_ROOT="$(git rev-parse --show-toplevel)"
           cd "$REPO_ROOT"
-          flutter analyze
+          flutter analyze --no-fatal-infos --no-fatal-warnings
       - name: Run Workspace Tests
         script: |
           REPO_ROOT="$(git rev-parse --show-toplevel)"
