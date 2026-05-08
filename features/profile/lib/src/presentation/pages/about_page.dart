@@ -1,7 +1,6 @@
 import 'package:common/common.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:resources/resources.dart';
 
 class AboutPage extends StatelessWidget {
   const AboutPage({super.key});
@@ -29,8 +28,7 @@ class AboutPage extends StatelessWidget {
             ),
             child: Center(
               child: Image.asset(
-                ResourceAssets.circleG,
-                package: ResourceAssets.packageName,
+                'assets/circle-g.png',
                 width: 96,
               ),
             ),

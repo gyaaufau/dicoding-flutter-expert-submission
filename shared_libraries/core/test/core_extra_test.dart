@@ -1,7 +1,13 @@
+import 'dart:io';
+import 'dart:typed_data';
+
 import 'package:core/core.dart';
+import 'package:core/src/network/ssl-pinning-network.dart';
 import 'package:dependencies/dependencies.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter/widgets.dart';
+import 'package:http/io_client.dart';
 
 class FakeChecker implements DataConnectionChecker {
   FakeChecker(this.value);
@@ -100,6 +106,58 @@ class TestCubit extends Cubit<int> {
   TestCubit() : super(0);
 }
 
+class FakeAssetBundle extends CachingAssetBundle {
+  FakeAssetBundle(this.data);
+
+  final ByteData data;
+  String? requestedKey;
+
+  @override
+  Future<ByteData> load(String key) async {
+    requestedKey = key;
+    return data;
+  }
+}
+
+class FakeHttpClient implements HttpClient {
+  BadCertificateCallback? assignedBadCertificateCallback;
+
+  @override
+  set badCertificateCallback(BadCertificateCallback? callback) {
+    assignedBadCertificateCallback = callback;
+  }
+
+  @override
+  noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
+}
+
+class FakePinnedClient implements Client {
+  @override
+  noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
+}
+
+class FakeX509Certificate implements X509Certificate {
+  @override
+  noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
+}
+
+File _findCertificateFile() {
+  const candidates = [
+    'assets/certificates.pem',
+    '../assets/certificates.pem',
+    '../../assets/certificates.pem',
+  ];
+
+  for (final path in candidates) {
+    final file = File(path);
+    if (file.existsSync()) {
+      return file;
+    }
+  }
+
+  throw StateError('Pinned certificate file not found for test');
+}
+
 void main() {
   tearDown(() async {
     await locator.reset();
@@ -143,14 +201,46 @@ void main() {
     ]);
   });
 
-  test('core injection should register shared dependencies', () {
+  test('core injection should register shared dependencies', () async {
     // arrange
-    registerCoreDependencies();
+    TestWidgetsFlutterBinding.ensureInitialized();
+    await registerCoreDependencies(sslPinningClient: FakePinnedClient());
 
     // assert
     expect(locator.isRegistered<NetworkInfo>(), true);
     expect(locator.isRegistered<Client>(), true);
     expect(locator.isRegistered<DataConnectionChecker>(), true);
+  });
+
+  test('ssl pinning should reject any bad certificate callback request', () {
+    expect(
+      SslPinningHttpClient.rejectBadCertificate(
+        FakeX509Certificate(),
+        'api.themoviedb.org',
+        443,
+      ),
+      false,
+    );
+  });
+
+  test('ssl pinning client should load pinned certificate asset', () async {
+    final pemBytes = await _findCertificateFile().readAsBytes();
+    final bundle = FakeAssetBundle(
+      ByteData.sublistView(Uint8List.fromList(pemBytes)),
+    );
+    final httpClient = FakeHttpClient();
+
+    final client = await SslPinningHttpClient.create(
+      bundle: bundle,
+      httpClientFactory: (_) => httpClient,
+    );
+
+    expect(bundle.requestedKey, SslPinningHttpClient.certificateAssetPath);
+    expect(client, isA<IOClient>());
+    expect(
+      httpClient.assignedBadCertificateCallback,
+      same(SslPinningHttpClient.rejectBadCertificate),
+    );
   });
 
   test('crashlytics collection should stay off in debug and test', () {

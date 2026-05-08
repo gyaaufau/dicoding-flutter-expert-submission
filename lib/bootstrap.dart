@@ -12,11 +12,13 @@ import 'package:flutter/widgets.dart';
 Future<void> bootstrap() async {
   WidgetsFlutterBinding.ensureInitialized();
   await initializeFirebase();
-  AppInjection.init();
+  await AppInjection.init();
+
   final analyticsTracker = locator<AnalyticsTracker>();
   final appInfoProvider = locator<AppInfoProvider>();
   final crashReporter = locator<CrashReporter>();
   Bloc.observer = locator<AppBlocObserver>();
+
   await initializeAnalytics(
     analyticsTracker: analyticsTracker,
     appInfoProvider: appInfoProvider,
