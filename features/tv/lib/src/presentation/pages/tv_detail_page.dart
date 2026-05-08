@@ -6,6 +6,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:go_router/go_router.dart';
 import 'package:tv_domain/tv_domain.dart';
 
+import '../routes/tv_routes.dart';
 import '../cubit/tv_detail_cubit.dart';
 import '../cubit/watchlist_tv_cubit.dart';
 import '../widgets/genre_chip.dart';
@@ -13,7 +14,7 @@ import '../widgets/rating_chip.dart';
 import '../widgets/season_button_pill.dart';
 
 class TvDetailPage extends StatefulWidget {
-  static const routeName = '/detail-tv';
+  static const routeName = AppRoutePaths.tvDetailPattern;
 
   final int id;
 
@@ -120,7 +121,10 @@ class _TvDetailPageState extends State<TvDetailPage> {
                   child: _TvDetailContent(
                     provider: provider,
                     onRecommendationTap: (id) {
-                      context.pushNamed('tv-detail', extra: id);
+                      context.pushNamed(
+                        TvRouteNames.detail,
+                        pathParameters: {AppRouteParams.id: '$id'},
+                      );
                     },
                   ),
                 )

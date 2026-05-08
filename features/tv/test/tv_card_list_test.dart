@@ -1,3 +1,4 @@
+import 'package:common/common.dart';
 import 'package:tv_domain/tv_domain.dart';
 import 'package:tv/tv.dart';
 import 'package:flutter/material.dart';
@@ -31,8 +32,8 @@ void main() {
           builder: (context, state) => Scaffold(body: TvCard(tv)),
         ),
         GoRoute(
-          name: 'tv-detail',
-          path: '/detail',
+          name: TvRouteNames.detail,
+          path: AppRoutePaths.tvDetailPattern,
           builder: (context, state) => const Scaffold(
             body: Text('halaman detail tv'),
           ),

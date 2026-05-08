@@ -7,6 +7,7 @@ import 'package:go_router/go_router.dart';
 import 'package:tv_domain/tv_domain.dart';
 
 import '../cubit/tv_list_cubit.dart';
+import '../routes/tv_routes.dart';
 import '../widgets/carousell_banner_widget.dart';
 import 'popular_tv_page.dart';
 import 'search_tv_page.dart';
@@ -15,7 +16,7 @@ import 'top_rated_tv_page.dart';
 class TvPage extends StatefulWidget {
   const TvPage({super.key});
 
-  static const ROUTE_NAME = '/tv';
+  static const ROUTE_NAME = AppRoutePaths.tv;
 
   @override
   State<TvPage> createState() => _TvPageState();
@@ -41,7 +42,7 @@ class _TvPageState extends State<TvPage> {
         actions: [
           IconButton(
             onPressed: () {
-              context.push(SearchTvPage.ROUTE_NAME);
+              context.push(AppRoutePaths.tvSearch);
             },
             icon: const Icon(Icons.search),
           ),
@@ -97,7 +98,7 @@ class _TvPageState extends State<TvPage> {
       children: [
         _buildSubHeading(
           title: 'Popular',
-          onTap: () => context.push(PopularTvPage.ROUTE_NAME),
+          onTap: () => context.push(AppRoutePaths.tvPopular),
         ),
         BlocBuilder<TvListCubit, TvListState>(
           builder: (context, data) {
@@ -120,7 +121,7 @@ class _TvPageState extends State<TvPage> {
       children: [
         _buildSubHeading(
           title: 'Top Rated',
-          onTap: () => context.push(TopRatedTvPage.ROUTE_NAME),
+          onTap: () => context.push(AppRoutePaths.tvTopRated),
         ),
         BlocBuilder<TvListCubit, TvListState>(
           builder: (context, data) {
@@ -182,10 +183,16 @@ class OnTheAirTvShowsList extends StatelessWidget {
               .toList(),
           isTvShows: true,
           onTap: () {
-            context.pushNamed('tv-detail', extra: tv.id);
+            context.pushNamed(
+              TvRouteNames.detail,
+              pathParameters: {AppRouteParams.id: '${tv.id}'},
+            );
           },
           onWatchNow: () {
-            context.pushNamed('tv-detail', extra: tv.id);
+            context.pushNamed(
+              TvRouteNames.detail,
+              pathParameters: {AppRouteParams.id: '${tv.id}'},
+            );
           },
         );
       }).toList(),
@@ -211,7 +218,10 @@ class PopularTvShowsList extends StatelessWidget {
             padding: const EdgeInsets.all(8),
             child: InkWell(
               onTap: () {
-                context.pushNamed('tv-detail', extra: tvShow.id);
+                context.pushNamed(
+                  TvRouteNames.detail,
+                  pathParameters: {AppRouteParams.id: '${tvShow.id}'},
+                );
               },
               child: ClipRRect(
                 borderRadius: const BorderRadius.all(Radius.circular(16)),
@@ -248,7 +258,10 @@ class TopRatedTvShowsList extends StatelessWidget {
             padding: const EdgeInsets.all(8),
             child: InkWell(
               onTap: () {
-                context.pushNamed('tv-detail', extra: tvShow.id);
+                context.pushNamed(
+                  TvRouteNames.detail,
+                  pathParameters: {AppRouteParams.id: '${tvShow.id}'},
+                );
               },
               child: ClipRRect(
                 borderRadius: const BorderRadius.all(Radius.circular(16)),

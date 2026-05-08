@@ -1,3 +1,4 @@
+export 'src/app_routes.dart';
 export 'src/app_router.dart';
 export 'src/constants.dart';
 export 'src/exception.dart';

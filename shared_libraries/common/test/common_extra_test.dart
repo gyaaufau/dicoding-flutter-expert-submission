@@ -61,7 +61,7 @@ void main() {
   testWidgets('main shell page should switch branch when tapped', (tester) async {
     // arrange
     final router = GoRouter(
-      initialLocation: '/movies',
+      initialLocation: AppRoutePaths.movies,
       routes: [
         StatefulShellRoute.indexedStack(
           builder: (context, state, shell) => MainShellPage(
@@ -71,7 +71,7 @@ void main() {
             StatefulShellBranch(
               routes: [
                 GoRoute(
-                  path: '/movies',
+                  path: AppRoutePaths.movies,
                   builder: (context, state) =>
                       const Scaffold(body: Text('movies page')),
                 ),
@@ -80,7 +80,7 @@ void main() {
             StatefulShellBranch(
               routes: [
                 GoRoute(
-                  path: '/tv',
+                  path: AppRoutePaths.tv,
                   builder: (context, state) =>
                       const Scaffold(body: Text('tv page')),
                 ),
@@ -89,7 +89,7 @@ void main() {
             StatefulShellBranch(
               routes: [
                 GoRoute(
-                  path: '/watchlist',
+                  path: AppRoutePaths.watchlist,
                   builder: (context, state) =>
                       const Scaffold(body: Text('watchlist page')),
                 ),
@@ -98,7 +98,7 @@ void main() {
             StatefulShellBranch(
               routes: [
                 GoRoute(
-                  path: '/profile',
+                  path: AppRoutePaths.profile,
                   builder: (context, state) =>
                       const Scaffold(body: Text('profile page')),
                 ),

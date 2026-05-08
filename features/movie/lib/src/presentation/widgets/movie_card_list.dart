@@ -35,7 +35,10 @@ class MovieCard extends StatelessWidget {
               ),
             );
           }
-          context.pushNamed(MovieRouteNames.detail, extra: movie.id);
+          context.pushNamed(
+            MovieRouteNames.detail,
+            pathParameters: {AppRouteParams.id: '${movie.id}'},
+          );
         },
         child: Stack(
           alignment: Alignment.bottomLeft,

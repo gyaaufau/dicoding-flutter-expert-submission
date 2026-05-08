@@ -7,7 +7,7 @@ import 'about_page.dart';
 class ProfilePage extends StatelessWidget {
   const ProfilePage({super.key});
 
-  static const routeName = '/profile';
+  static const routeName = AppRoutePaths.profile;
 
   @override
   Widget build(BuildContext context) {
@@ -74,7 +74,7 @@ class ProfilePage extends StatelessWidget {
                 'Informasi singkat tentang aplikasi Ditonton',
               ),
               trailing: const Icon(Icons.arrow_forward_ios, size: 16),
-              onTap: () => context.push(AboutPage.routeName),
+              onTap: () => context.push(AppRoutePaths.profileAbout),
             ),
           ),
         ],

@@ -15,7 +15,7 @@ import '../widgets/rating_chip.dart';
 class MovieDetailPage extends StatefulWidget {
   const MovieDetailPage({super.key, required this.id});
 
-  static const ROUTE_NAME = '/detail';
+  static const ROUTE_NAME = AppRoutePaths.moviesDetailPattern;
 
   final int id;
 
@@ -104,7 +104,10 @@ class _MovieDetailPageState extends State<MovieDetailPage> {
                   child: _MovieDetailContent(
                     provider: provider,
                     onRecommendationTap: (id) {
-                      context.pushNamed(MovieRouteNames.detail, extra: id);
+                      context.pushNamed(
+                        MovieRouteNames.detail,
+                        pathParameters: {AppRouteParams.id: '$id'},
+                      );
                     },
                   ),
                 )

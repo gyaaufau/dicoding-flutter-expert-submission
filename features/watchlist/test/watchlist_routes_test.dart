@@ -1,5 +1,6 @@
+import 'package:common/common.dart';
+import 'package:dependencies/dependencies.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:movie/movie.dart';
@@ -43,11 +44,22 @@ class TestWatchlistTvCubit extends WatchlistTvCubit {
 }
 
 void main() {
+  tearDown(() async {
+    await GetIt.instance.reset();
+  });
+
   testWidgets('watchlist route should build page', (tester) async {
     // arrange
+    GetIt.instance.registerFactory<WatchlistMovieCubit>(
+      () => TestWatchlistMovieCubit(),
+    );
+    GetIt.instance.registerFactory<WatchlistTvCubit>(
+      () => TestWatchlistTvCubit(),
+    );
+
     final branch = buildWatchlistBranch();
     final router = GoRouter(
-      initialLocation: WatchlistMoviesPage.ROUTE_NAME,
+      initialLocation: AppRoutePaths.watchlist,
       routes: [
         StatefulShellRoute.indexedStack(
           builder: (context, state, shell) => shell,
@@ -57,17 +69,7 @@ void main() {
     );
 
     // act
-    await tester.pumpWidget(
-      MultiBlocProvider(
-        providers: [
-          BlocProvider<WatchlistMovieCubit>(
-            create: (_) => TestWatchlistMovieCubit(),
-          ),
-          BlocProvider<WatchlistTvCubit>(create: (_) => TestWatchlistTvCubit()),
-        ],
-        child: MaterialApp.router(routerConfig: router),
-      ),
-    );
+    await tester.pumpWidget(MaterialApp.router(routerConfig: router));
 
     // assert
     expect(find.byType(WatchlistMoviesPage), findsOneWidget);

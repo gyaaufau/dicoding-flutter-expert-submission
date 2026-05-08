@@ -7,6 +7,8 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:tv_domain/tv_domain.dart';
 
+import '../routes/tv_routes.dart';
+
 class TvCard extends StatelessWidget {
   final Tv tv;
   final String? sourceScreen;
@@ -33,7 +35,10 @@ class TvCard extends StatelessWidget {
               ),
             );
           }
-          context.pushNamed('tv-detail', extra: tv.id);
+          context.pushNamed(
+            TvRouteNames.detail,
+            pathParameters: {AppRouteParams.id: '${tv.id}'},
+          );
         },
         child: Stack(
           alignment: Alignment.bottomLeft,
