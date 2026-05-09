@@ -8,7 +8,7 @@ import '../widgets/movie_card_list.dart';
 class SearchMoviePage extends StatelessWidget {
   const SearchMoviePage({super.key});
 
-  static const ROUTE_NAME = '/search';
+  static const ROUTE_NAME = AppRoutePaths.moviesSearch;
 
   @override
   Widget build(BuildContext context) {

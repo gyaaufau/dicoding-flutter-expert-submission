@@ -1,4 +1,6 @@
+import 'package:common/common.dart';
 import 'package:core/core.dart';
+import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../pages/about_page.dart';
@@ -7,15 +9,15 @@ import '../pages/profile_page.dart';
 class ProfileRouteNames {
   const ProfileRouteNames._();
 
-  static const home = 'profile';
-  static const about = 'about';
+  static const home = AppRouteNames.profile;
+  static const about = AppRouteNames.profileAbout;
 }
 
 StatefulShellBranch buildProfileBranch() {
   return StatefulShellBranch(
     routes: [
       GoRoute(
-        path: ProfilePage.routeName,
+        path: AppRoutePaths.profile,
         name: ProfileRouteNames.home,
         builder: (context, state) => AppRouteTrackingScope(
           routeName: state.name ?? ProfileRouteNames.home,
@@ -29,10 +31,13 @@ StatefulShellBranch buildProfileBranch() {
   );
 }
 
-List<RouteBase> buildProfileRoutes() {
+List<RouteBase> buildProfileRoutes({
+  GlobalKey<NavigatorState>? parentNavigatorKey,
+}) {
   return [
     GoRoute(
-      path: AboutPage.routeName,
+      parentNavigatorKey: parentNavigatorKey,
+      path: AppRoutePaths.profileAbout,
       name: ProfileRouteNames.about,
       builder: (context, state) => AppRouteTrackingScope(
         routeName: state.name ?? ProfileRouteNames.about,

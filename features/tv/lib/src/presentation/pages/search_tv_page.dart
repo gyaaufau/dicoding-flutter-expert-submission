@@ -6,7 +6,7 @@ import '../cubit/tv_search_cubit.dart';
 import '../widgets/tv_card_list.dart';
 
 class SearchTvPage extends StatelessWidget {
-  static const ROUTE_NAME = '/search-tv';
+  static const ROUTE_NAME = AppRoutePaths.tvSearch;
 
   const SearchTvPage({super.key});
 

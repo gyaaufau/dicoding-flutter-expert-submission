@@ -6,7 +6,7 @@ import '../cubit/tv_list_cubit.dart';
 import '../widgets/tv_card_list.dart';
 
 class PopularTvPage extends StatefulWidget {
-  static const ROUTE_NAME = '/popular-tv';
+  static const ROUTE_NAME = AppRoutePaths.tvPopular;
 
   const PopularTvPage({super.key});
 

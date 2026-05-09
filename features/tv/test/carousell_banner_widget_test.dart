@@ -73,4 +73,36 @@ void main() {
     expect(find.byType(PageView), findsOneWidget);
     expect(find.byType(AnimatedContainer), findsNWidgets(2));
   });
+
+  testWidgets('tv banner should stay stable on compact height', (tester) async {
+    // arrange
+    final widget = CarousellBannerWidget(
+      height: 220,
+      items: [
+        const CarousellBannerItem(
+          title: 'Breaking Bad Extremely Long Title for Compact Carousel',
+          imagePath: 'https://example.com/poster.jpg',
+          overview:
+              'Long compact tv overview that should be hidden to prevent overflow.',
+          rating: 9.1,
+          genreLabels: ['Drama', 'Crime', 'Thriller'],
+          seasonCount: 5,
+          isTvShows: true,
+        ),
+      ],
+    );
+
+    // act
+    await tester.pumpWidget(makeTestableWidget(widget));
+
+    // assert
+    expect(tester.takeException(), isNull);
+    expect(find.text('Watch Now'), findsOneWidget);
+    expect(
+      find.text(
+        'Long compact tv overview that should be hidden to prevent overflow.',
+      ),
+      findsNothing,
+    );
+  });
 }

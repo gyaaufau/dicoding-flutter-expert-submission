@@ -5,7 +5,7 @@ import 'package:movie/movie.dart';
 import 'package:tv/tv.dart';
 
 class WatchlistMoviesPage extends StatefulWidget {
-  static const ROUTE_NAME = '/watchlist';
+  static const ROUTE_NAME = AppRoutePaths.watchlist;
 
   const WatchlistMoviesPage({super.key});
 

@@ -172,57 +172,79 @@ class _BannerCard extends StatelessWidget {
                 ),
                 child: LayoutBuilder(
                   builder: (context, constraints) {
+                    final isUltraCompact =
+                        compact && constraints.maxHeight <= 190.h;
                     final isVeryCompact =
                         compact && constraints.maxHeight <= 250.h;
                     final showOverview =
                         (item.overview ?? '').trim().isNotEmpty &&
                         !isVeryCompact;
+                    final badgeWidgets = <Widget>[
+                      if (item.rating != null)
+                        _MetaBadge(
+                          compact: compact,
+                          icon: Icons.star_rounded,
+                          label: item.rating!.toStringAsFixed(1),
+                          highlighted: true,
+                        ),
+                      if (item.isTvShows && item.seasonCount != null)
+                        _MetaBadge(
+                          compact: compact,
+                          icon: Icons.layers_rounded,
+                          label:
+                              '${item.seasonCount} ${item.seasonCount == 1 ? 'Season' : 'Seasons'}',
+                        ),
+                      if (!item.isTvShows &&
+                          (item.durationText ?? '').trim().isNotEmpty)
+                        _MetaBadge(
+                          compact: compact,
+                          icon: Icons.schedule_rounded,
+                          label: item.durationText!.trim(),
+                        ),
+                    ];
+                    final visibleBadges =
+                        isUltraCompact && badgeWidgets.length > 1
+                        ? badgeWidgets.take(1).toList()
+                        : badgeWidgets;
+                    final visibleGenreLabels = isUltraCompact
+                        ? item.genreLabels.take(1).toList()
+                        : isVeryCompact
+                        ? item.genreLabels.take(2).toList()
+                        : item.genreLabels;
+                    final titleMaxWidth = compact ? 220.w : 250.w;
+                    final overviewMaxWidth = compact ? 240.w : 300.w;
+                    final sectionSpacing = isUltraCompact
+                        ? 6.h
+                        : isVeryCompact
+                        ? 8.h
+                        : 12.h;
+                    final groupSpacing = isUltraCompact
+                        ? 4.h
+                        : isVeryCompact
+                        ? 6.h
+                        : compact
+                        ? 8.h
+                        : 10.h;
 
-                    return Align(
-                      alignment: Alignment.bottomLeft,
+                    return SizedBox(
+                      width: double.infinity,
+                      height: constraints.maxHeight,
                       child: Column(
-                        mainAxisSize: MainAxisSize.min,
                         crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisAlignment: MainAxisAlignment.end,
                         children: [
-                          Wrap(
-                            spacing: 8.w,
-                            runSpacing: isVeryCompact ? 6.h : 8.h,
-                            children: [
-                              if (item.rating != null)
-                                _MetaBadge(
-                                  compact: compact,
-                                  icon: Icons.star_rounded,
-                                  label: item.rating!.toStringAsFixed(1),
-                                  highlighted: true,
-                                ),
-                              if (item.isTvShows && item.seasonCount != null)
-                                _MetaBadge(
-                                  compact: compact,
-                                  icon: Icons.layers_rounded,
-                                  label:
-                                      '${item.seasonCount} ${item.seasonCount == 1 ? 'Season' : 'Seasons'}',
-                                ),
-                              if (!item.isTvShows &&
-                                  (item.durationText ?? '').trim().isNotEmpty)
-                                _MetaBadge(
-                                  compact: compact,
-                                  icon: Icons.schedule_rounded,
-                                  label: item.durationText!.trim(),
-                                ),
-                            ],
-                          ),
-                          if (item.genreLabels.isNotEmpty) ...[
-                            SizedBox(
-                              height: isVeryCompact
-                                  ? 6.h
-                                  : compact
-                                  ? 8.h
-                                  : 10.h,
-                            ),
+                          if (visibleBadges.isNotEmpty)
                             Wrap(
                               spacing: 8.w,
-                              runSpacing: isVeryCompact ? 6.h : 8.h,
-                              children: item.genreLabels
+                              runSpacing: groupSpacing,
+                              children: visibleBadges,
+                            ),
+                          if (visibleGenreLabels.isNotEmpty) ...[
+                            SizedBox(height: groupSpacing),
+                            Wrap(
+                              spacing: 8.w,
+                              runSpacing: groupSpacing,
+                              children: visibleGenreLabels
                                   .map(
                                     (genre) => GenreChip(
                                       label: genre,
@@ -232,54 +254,65 @@ class _BannerCard extends StatelessWidget {
                                   .toList(),
                             ),
                           ],
-                          SizedBox(
-                            height: isVeryCompact
-                                ? 8.h
-                                : compact
-                                ? 10.h
-                                : 12.h,
-                          ),
-                          ConstrainedBox(
-                            constraints: BoxConstraints(
-                              maxWidth: compact ? 220.w : 250.w,
-                            ),
-                            child: Text(
-                              item.title,
-                              maxLines: isVeryCompact ? 1 : 2,
-                              overflow: TextOverflow.ellipsis,
-                              style: kHeading5.copyWith(
-                                color: Colors.white,
-                                fontWeight: FontWeight.w700,
-                              ),
-                            ),
-                          ),
-                          if (showOverview) ...[
-                            SizedBox(height: compact ? 8.h : 10.h),
-                            ConstrainedBox(
-                              constraints: BoxConstraints(
-                                maxWidth: compact ? 240.w : 300.w,
-                              ),
-                              child: Text(
-                                item.overview!,
-                                maxLines: compact ? 2 : 3,
-                                overflow: TextOverflow.ellipsis,
-                                style: kBodyText.copyWith(
-                                  color: Colors.white.withValues(alpha: 0.86),
-                                  height: 1.5,
+                          SizedBox(height: sectionSpacing),
+                          Flexible(
+                            fit: FlexFit.loose,
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                ConstrainedBox(
+                                  constraints: BoxConstraints(
+                                    maxWidth: titleMaxWidth,
+                                  ),
+                                  child: Text(
+                                    item.title,
+                                    maxLines: isVeryCompact ? 1 : 2,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: kHeading5.copyWith(
+                                      color: Colors.white,
+                                      fontWeight: FontWeight.w700,
+                                    ),
+                                  ),
                                 ),
-                              ),
+                                if (showOverview) ...[
+                                  SizedBox(height: groupSpacing),
+                                  ConstrainedBox(
+                                    constraints: BoxConstraints(
+                                      maxWidth: overviewMaxWidth,
+                                    ),
+                                    child: Text(
+                                      item.overview!,
+                                      maxLines: compact ? 2 : 3,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: kBodyText.copyWith(
+                                        color: Colors.white.withValues(
+                                          alpha: 0.86,
+                                        ),
+                                        height: 1.5,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ],
                             ),
-                          ],
-                          SizedBox(height: compact ? 12.h : 16.h),
+                          ),
+                          SizedBox(height: sectionSpacing),
                           FilledButton(
                             onPressed: item.onWatchNow ?? item.onTap,
                             style: FilledButton.styleFrom(
                               backgroundColor: kMikadoYellow,
                               foregroundColor: Colors.black,
+                              minimumSize: Size(0, isUltraCompact ? 34.h : 0),
                               padding: EdgeInsets.symmetric(
                                 horizontal: compact ? 14.w : 18.w,
-                                vertical: compact ? 12.h : 14.h,
+                                vertical: isUltraCompact
+                                    ? 8.h
+                                    : compact
+                                    ? 10.h
+                                    : 14.h,
                               ),
+                              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                             ),
                             child: Text(item.buttonText),
                           ),

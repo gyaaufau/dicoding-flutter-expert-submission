@@ -1,3 +1,4 @@
+import 'package:common/common.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
@@ -36,7 +37,7 @@ void main() {
         ),
         GoRoute(
           name: MovieRouteNames.detail,
-          path: '/detail',
+          path: AppRoutePaths.moviesDetailPattern,
           builder: (context, state) =>
               const Scaffold(body: Text('halaman detail movie')),
         ),

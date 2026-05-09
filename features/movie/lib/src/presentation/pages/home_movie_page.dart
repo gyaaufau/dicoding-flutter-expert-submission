@@ -16,7 +16,7 @@ import '../widgets/carousell_banner_widget.dart';
 class HomeMoviePage extends StatefulWidget {
   const HomeMoviePage({super.key});
 
-  static const ROUTE_NAME = '/movies';
+  static const ROUTE_NAME = AppRoutePaths.movies;
 
   @override
   State<HomeMoviePage> createState() => _HomeMoviePageState();
@@ -42,7 +42,7 @@ class _HomeMoviePageState extends State<HomeMoviePage> {
         title: const Text('Movies'),
         actions: [
           IconButton(
-            onPressed: () => context.push(SearchMoviePage.ROUTE_NAME),
+            onPressed: () => context.push(AppRoutePaths.moviesSearch),
             icon: const Icon(Icons.search),
           ),
         ],
@@ -100,7 +100,7 @@ class _HomeMoviePageState extends State<HomeMoviePage> {
         children: [
           _buildSubHeading(
             title: 'Popular',
-            onTap: () => context.push(PopularMoviesPage.ROUTE_NAME),
+            onTap: () => context.push(AppRoutePaths.moviesPopular),
           ),
           BlocBuilder<MovieListCubit, MovieListState>(
             builder: (context, data) {
@@ -126,7 +126,7 @@ class _HomeMoviePageState extends State<HomeMoviePage> {
         children: [
           _buildSubHeading(
             title: 'Top Rated',
-            onTap: () => context.push(TopRatedMoviesPage.ROUTE_NAME),
+            onTap: () => context.push(AppRoutePaths.moviesTopRated),
           ),
           BlocBuilder<MovieListCubit, MovieListState>(
             builder: (context, data) {
@@ -196,10 +196,16 @@ class NowPlayingMovieList extends StatelessWidget {
               .toList(),
           isTvShows: false,
           onTap: () {
-            context.pushNamed(MovieRouteNames.detail, extra: movie.id);
+            context.pushNamed(
+              MovieRouteNames.detail,
+              pathParameters: {AppRouteParams.id: '${movie.id}'},
+            );
           },
           onWatchNow: () {
-            context.pushNamed(MovieRouteNames.detail, extra: movie.id);
+            context.pushNamed(
+              MovieRouteNames.detail,
+              pathParameters: {AppRouteParams.id: '${movie.id}'},
+            );
           },
         );
       }).toList(),
@@ -225,7 +231,10 @@ class MovieList extends StatelessWidget {
             padding: const EdgeInsets.all(8),
             child: InkWell(
               onTap: () {
-                context.pushNamed(MovieRouteNames.detail, extra: movie.id);
+                context.pushNamed(
+                  MovieRouteNames.detail,
+                  pathParameters: {AppRouteParams.id: '${movie.id}'},
+                );
               },
               child: ClipRRect(
                 borderRadius: const BorderRadius.all(Radius.circular(16)),

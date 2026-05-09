@@ -5,6 +5,7 @@ GoRouter buildAppRouter({
   required String initialLocation,
   required RouteObserver<ModalRoute> observer,
   required Widget errorPage,
+  GlobalKey<NavigatorState>? navigatorKey,
   required Widget Function(
     BuildContext context,
     GoRouterState state,
@@ -14,7 +15,7 @@ GoRouter buildAppRouter({
   required List<StatefulShellBranch> branches,
   List<RouteBase> routes = const [],
 }) {
-  final rootNavigatorKey = GlobalKey<NavigatorState>();
+  final rootNavigatorKey = navigatorKey ?? GlobalKey<NavigatorState>();
 
   return GoRouter(
     navigatorKey: rootNavigatorKey,

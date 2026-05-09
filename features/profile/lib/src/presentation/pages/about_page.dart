@@ -5,7 +5,7 @@ import 'package:go_router/go_router.dart';
 class AboutPage extends StatelessWidget {
   const AboutPage({super.key});
 
-  static const routeName = '/about';
+  static const routeName = AppRoutePaths.profileAbout;
 
   @override
   Widget build(BuildContext context) {

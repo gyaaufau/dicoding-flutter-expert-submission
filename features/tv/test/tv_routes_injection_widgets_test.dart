@@ -2,8 +2,45 @@ import 'package:dependencies/dependencies.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:common/common.dart';
 import 'package:tv/tv.dart';
 import 'package:tv_domain/tv_domain.dart';
+
+class FakeTvRepository implements TvRepository {
+  @override
+  noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
+}
+
+class TestTvDetailCubit extends TvDetailCubit {
+  TestTvDetailCubit()
+    : super(
+        getTvDetail: GetTvDetail(FakeTvRepository()),
+        getTvRecommendations: GetTvRecommendations(FakeTvRepository()),
+        getTvSeasonDetail: GetTvSeasonDetail(FakeTvRepository()),
+      );
+
+  @override
+  Future<void> fetchTvDetail(int id) async {}
+
+  @override
+  Future<void> fetchTvSeasonDetail(int tvId, int seasonNumber) async {}
+}
+
+class TestWatchlistTvCubit extends WatchlistTvCubit {
+  TestWatchlistTvCubit()
+    : super(
+        getWatchlistTv: GetWatchlistTv(FakeTvRepository()),
+        getWatchlistTvStatus: GetWatchlistTvStatus(FakeTvRepository()),
+        saveWatchlistTv: SaveWatchlistTv(FakeTvRepository()),
+        removeWatchlistTv: RemoveWatchlistTv(FakeTvRepository()),
+      );
+
+  @override
+  Future<void> loadWatchlistStatus(int id) async {}
+
+  @override
+  Future<void> fetchWatchlistTv() async {}
+}
 
 void main() {
   tearDown(() async {
@@ -20,6 +57,49 @@ void main() {
     // assert
     expect(branch.routes.length, 1);
     expect(routes.length, 4);
+  });
+
+  testWidgets('tv detail route should parse valid id', (tester) async {
+    GetIt.instance.registerFactory<TvDetailCubit>(() => TestTvDetailCubit());
+    GetIt.instance.registerFactory<WatchlistTvCubit>(
+      () => TestWatchlistTvCubit(),
+    );
+
+    final router = GoRouter(
+      initialLocation: '/tv/456',
+      routes: buildTvRoutes(
+        invalidIdPage: const Scaffold(body: Text('invalid tv id')),
+      ),
+    );
+
+    await tester.pumpWidget(
+      ScreenUtilInit(
+        designSize: const Size(360, 690),
+        builder: (context, child) => MaterialApp.router(routerConfig: router),
+      ),
+    );
+
+    expect(find.byType(TvDetailPage), findsOneWidget);
+  });
+
+  testWidgets('tv detail route should reject invalid id', (tester) async {
+    final router = GoRouter(
+      initialLocation: '/tv/abc',
+      routes: buildTvRoutes(
+        invalidIdPage: const Scaffold(body: Text('invalid tv id')),
+      ),
+    );
+
+    await tester.pumpWidget(MaterialApp.router(routerConfig: router));
+
+    expect(find.text('invalid tv id'), findsOneWidget);
+  });
+
+  test('tv route constants should expose target paths', () {
+    expect(AppRoutePaths.tv, '/tv');
+    expect(AppRoutePaths.tvDetailPattern, '/tv/:id');
+    expect(AppRouteNames.tvDetail, 'tv-detail');
+    expect(AppRouteHelpers.tvDetail(456), '/tv/456');
   });
 
   test('tv injection should register cubits', () {
